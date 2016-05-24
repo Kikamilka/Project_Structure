@@ -5,7 +5,6 @@ $ gulp babel
 -> public/js/
 
 2. Минификация JS.
-+ создание map файлов здесь же.
 $ gulp compress
 -> public/js/compress/
 map -> public/js/compress/maps/
