@@ -12,7 +12,7 @@ const babel = require('gulp-babel');
 const uglify = require('gulp-uglify');
 const browserify = require('browserify');
 const source = require('vinyl-source-stream');
-const generateSuite = require("gulp-mocha-browserify-suite");
+const generateSuite = require("gulp-mocha-browserify-suite"); // FIXME не используется
 const mocha = require('gulp-mocha');
 var jshint = require('gulp-jshint');
 
@@ -35,18 +35,12 @@ gulp.task('compress', function() {
 });
 
 // 3. Склейка JS в один бандл (gulp browserify)
-gulp.task('browserify', function() { // FIXME browserify при должной настройке может сам выполнить обработку через babeljs, минификацию и создание map файлов, отдельные таски для этого не нужны
+gulp.task('browserify', function() { // FIXME добавить babeljs и минификацию через browserify
     return browserify(['frontend/js/brows/bar.js', 'frontend/js/brows/foo.js', 'frontend/js/brows/main.js']) // FIXME достаточно указать главный файл
         .bundle() // FIXME добавить обработку ошибок (вместо стектрейса пусть выводится текст ошибки)
         .pipe(source('bundle.js'))
         .pipe(gulp.dest('public/js/browserify'));
 });
-/*
- 	FIXME временные файлы лучше класть во временную директорию (к примеру, /temp). В директории /public/js должен лежать js файл (бандл) из шага 3,
- 	а я наблюдаю там временные файлы из шагов 1 и 2. К тому же, создание временных файлов без особой необходимости не вписывается в идеологию gulp.
- 	Как я указал выше, данную цепочку преобразований можно произвести, используя browserify + соответствующие плагины. Либо тогда не использовать browserify,
- 	но делать всё в одном таске через pipe (тогда придётся подсуетиться на тему склейки модулей для использования в браузере).
-*/
 
 // 5. Запуск unit тестов. (gulp test)
 gulp.task('lint', function() {
@@ -122,5 +116,5 @@ gulp.task('dev',
  	Составные таски (которые будут вызываться из консоли - default, dev) лучше определять в конце файла, тем самым визуально отделяя внутренние таски от внешних,
  	чтобы было понятно что следует использовать при разработке.
  	Ещё один момент: пусть в html файле подключается js модуль, и вызывается функция, результат работы которой пишется в консоль.
- 	Например, подключить main.js, в нём вызвать функцию из модуля bar, результат - в консоль. Это наглядно продемонстрирует работу watch при изменении js кода.
+ 	Например, подключить main.js, в нём вызвать функцию из модуля foo, результат - в консоль. Это наглядно продемонстрирует работу watch при изменении js кода.
 */
