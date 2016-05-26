@@ -37,7 +37,7 @@ gulp.task('compress', function() {
 // 3. Склейка JS в один бандл (gulp browserify)
 gulp.task('browserify', function() { // FIXME browserify при должной настройке может сам выполнить обработку через babeljs, минификацию и создание map файлов, отдельные таски для этого не нужны
     return browserify(['frontend/js/brows/bar.js', 'frontend/js/brows/foo.js', 'frontend/js/brows/main.js']) // FIXME достаточно указать главный файл
-        .bundle()
+        .bundle() // FIXME добавить обработку ошибок (вместо стектрейса пусть выводится текст ошибки)
         .pipe(source('bundle.js'))
         .pipe(gulp.dest('public/js/browserify'));
 });
