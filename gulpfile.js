@@ -94,7 +94,7 @@ gulp.task('assets', function() {
 
 gulp.task('build', gulp.series('clean', gulp.parallel('styles', 'assets'))); // FIXME а компиляция js не относится к build?
 
-gulp.task('watchPage', function() { // FIXME а отслеживание js файлов? (+ тесты)
+gulp.task('watchPage', function() { // FIXME а отслеживание js файлов? (+ тесты для скриптов из директории frontend)
     // наблюдает за изменениями в файле styles и сразу все пересобирается
     gulp.watch('frontend/styles/**/*.* ', gulp.series('styles'));
     gulp.watch('frontend/assets/**/*.*', gulp.series('assets'));
