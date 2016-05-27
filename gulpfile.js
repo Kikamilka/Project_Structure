@@ -19,7 +19,7 @@ var jshint = require('gulp-jshint');
 const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV == 'development';
 
 // 1. Процессинг JS (BabelJs) (gulp babel)
-gulp.task('babel', function() {
+gulp.task('babel', function() { // FIXME шаги 1 и 2 можно убрать, и делать всё через browserify
     return gulp.src('frontend/js/example.js')
         .pipe(babel())
         .pipe(gulp.dest('public/js'));
@@ -61,7 +61,7 @@ gulp.task('watch', function() {
     gulp.watch(['src/*.js', 'test/*.js'], gulp.series('inn_test'));
 });
 
-gulp.task('test', gulp.parallel(gulp.series('lint','inn_test'), 'watch')); // FIXME неплохо бы разбить на выполнение тестов и watch: я хочу иметь возможность прогнать тесты единожды, без запуска watch
+gulp.task('test', gulp.parallel(gulp.series('lint','inn_test'), 'watch')); // FIXME неплохо бы убрать watch: я хочу иметь возможность прогнать тесты единожды, без запуска watch
 
 // 6. Процессинг CSS. (.styl -> .css) + map файлы (gulp styles)
 gulp.task('styles', function() {
@@ -94,7 +94,7 @@ gulp.task('assets', function() {
 
 gulp.task('build', gulp.series('clean', gulp.parallel('styles', 'assets'))); // FIXME а компиляция js не относится к build?
 
-gulp.task('watchPage', function() { // FIXME а отслеживание js файлов?
+gulp.task('watchPage', function() { // FIXME а отслеживание js файлов? (+ тесты)
     // наблюдает за изменениями в файле styles и сразу все пересобирается
     gulp.watch('frontend/styles/**/*.* ', gulp.series('styles'));
     gulp.watch('frontend/assets/**/*.*', gulp.series('assets'));
@@ -117,4 +117,5 @@ gulp.task('dev',
  	чтобы было понятно что следует использовать при разработке.
  	Ещё один момент: пусть в html файле подключается js модуль, и вызывается функция, результат работы которой пишется в консоль.
  	Например, подключить main.js, в нём вызвать функцию из модуля foo, результат - в консоль. Это наглядно продемонстрирует работу watch при изменении js кода.
+ 	Остальные js файлы (использующиеся в шагах 1 и 2) можно удалить.
 */
