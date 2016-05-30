@@ -1,4 +1,4 @@
-'use strict'
+"use strict";
 
 const gulp = require('gulp');
 const stylus = require('gulp-stylus');
@@ -8,68 +8,50 @@ const sourcemaps = require('gulp-sourcemaps');
 const gulpIf = require('gulp-if'); // проверка условия на этапе выполнения потоков
 const del = require('del');
 const browserSync = require('browser-sync').create();
-const babel = require('gulp-babel');
 const uglify = require('gulp-uglify');
 const browserify = require('browserify');
 const source = require('vinyl-source-stream');
-const generateSuite = require("gulp-mocha-browserify-suite"); // FIXME не используется
 const mocha = require('gulp-mocha');
-var jshint = require('gulp-jshint');
+const babelify = require('babelify');
+const glob = require('glob');
+const gulp_util = require('gulp-util');
+const buff = require('vinyl-buffer')
 
 const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV == 'development';
 
-// 1. Процессинг JS (BabelJs) (gulp babel)
-gulp.task('babel', function() { // FIXME шаги 1 и 2 можно убрать, и делать всё через browserify
-    return gulp.src('frontend/js/example.js')
-        .pipe(babel())
-        .pipe(gulp.dest('public/js'));
-});
-
-// 2. Минификация JS + 4.создание map файлов (gulp compress)
-gulp.task('compress', function() {
-    return gulp.src('frontend/js/test_ugl.js')
-        .pipe(gulpIf(isDevelopment, sourcemaps.init())) // file.sourceMap (пустая)
-        .pipe(uglify())
-        .pipe(gulpIf(isDevelopment, sourcemaps.write('./maps'))) // итоговая map - для разработки лучше когда внутри самого файла находится
-        .pipe(gulp.dest('public/js/compress'));
-});
-
+// 1. Процессинг JS (BabelJs)
+// 2. Минификация JS
 // 3. Склейка JS в один бандл (gulp browserify)
-gulp.task('browserify', function() { // FIXME добавить babeljs и минификацию через browserify
-    return browserify(['frontend/js/brows/bar.js', 'frontend/js/brows/foo.js', 'frontend/js/brows/main.js']) // FIXME достаточно указать главный файл
-        .bundle() // FIXME добавить обработку ошибок (вместо стектрейса пусть выводится текст ошибки)
-        .pipe(source('bundle.js'))
-        .pipe(gulp.dest('public/js/browserify'));
+gulp.task('browserify', function() {
+    var files = glob.sync('frontend/**/*.js');
+    return browserify({
+      entries: files,
+      debug: true
+    })    
+    .transform(babelify)
+    .bundle()
+    .on('error', gulp_util.log)
+    .pipe(source('bundle.js'))
+    .pipe(buff())
+    .pipe(uglify())
+    .pipe(gulp.dest('public/js/browserify'));
 });
 
 // 5. Запуск unit тестов. (gulp test)
-gulp.task('lint', function() {
+gulp.task('test', function() {
   return gulp
-    .src(['gulpfile.js', 'src/*.js', 'test/*.js']) // FIXME дочерние директории игнорирутся (подобная проблема встречается и в других частях файла, я не стал помечать остальные места, попробуй найти их все :))
-    .pipe(jshint()) // FIXME jshint ругается на ES6
-    .pipe(jshint.reporter('default'));
+    .src('./test/**/*.js', {read: false})
+    .pipe(mocha())
+    .on('error', gulp_util.log);
 });
 
-gulp.task('inn_test', function() { // FIXME таскам лучше давать понятные имена
-  return gulp
-    .src('test/*.js')
-    .pipe(mocha()); // FIXME сделать вывод тестов более красивым (без страшных стектрейсов)
-});
-
-gulp.task('watch', function() {
-    gulp.watch(['src/*.js', 'test/*.js'], gulp.series('lint')); // FIXME можно объединить эти строки в одну?
-    gulp.watch(['src/*.js', 'test/*.js'], gulp.series('inn_test'));
-});
-
-gulp.task('test', gulp.parallel(gulp.series('lint','inn_test'), 'watch')); // FIXME неплохо бы убрать watch: я хочу иметь возможность прогнать тесты единожды, без запуска watch
-
-// 6. Процессинг CSS. (.styl -> .css) + map файлы (gulp styles)
+// 6. Процессинг CSS. (.styl -> .css) + 4. map файлы (gulp styles)
 gulp.task('styles', function() {
     return gulp.src('frontend/styles/*.styl')
-        .pipe(gulpIf(isDevelopment, sourcemaps.init())) // file.sourceMap (пустая)
+        .pipe(gulpIf(isDevelopment, sourcemaps.init()))
         .pipe(stylus())
         .pipe(concat('main.css'))
-        .pipe(gulpIf(isDevelopment, sourcemaps.write('.'))) // итоговая map - для разработки лучше когда внутри самого файла находится
+        .pipe(gulpIf(isDevelopment, sourcemaps.write('.')))
         .pipe(gulp.dest('public'));
 });
 
@@ -78,7 +60,8 @@ gulp.task('clean', function() {
     return del('public');
 });
 
-gulp.task('main_task', gulp.series('clean', 'babel', 'compress', 'browserify', 'styles')); // FIXME здесь подойдёт название "default"
+gulp.task('default', gulp.series('clean', 'browserify', 'test', 'styles')); 
+
 
 // Дополнительное задание:
 // gulp dev -> запуск странички в браузере - мониторинг и изменения в реальном времени (*)
@@ -92,11 +75,11 @@ gulp.task('assets', function() {
         .pipe(gulp.dest('public'));
 });
 
-gulp.task('build', gulp.series('clean', gulp.parallel('styles', 'assets'))); // FIXME а компиляция js не относится к build?
+gulp.task('build', gulp.series('clean', gulp.parallel('styles', 'assets'))); 
+// FIXME а компиляция js не относится к build?
 
 gulp.task('watchPage', function() { // FIXME а отслеживание js файлов? (+ тесты для скриптов из директории frontend)
-    // наблюдает за изменениями в файле styles и сразу все пересобирается
-    gulp.watch('frontend/styles/**/*.* ', gulp.series('styles'));
+    gulp.watch('frontend/styles/**/*.*', gulp.series('styles'));
     gulp.watch('frontend/assets/**/*.*', gulp.series('assets'));
 });
 
@@ -113,9 +96,12 @@ gulp.task('dev',
 
 /*
  	FIXME
- 	Составные таски (которые будут вызываться из консоли - default, dev) лучше определять в конце файла, тем самым визуально отделяя внутренние таски от внешних,
+ 	Составные таски (которые будут вызываться из консоли - default, dev) лучше определять в конце файла, 
+    тем самым визуально отделяя внутренние таски от внешних,
  	чтобы было понятно что следует использовать при разработке.
- 	Ещё один момент: пусть в html файле подключается js модуль, и вызывается функция, результат работы которой пишется в консоль.
- 	Например, подключить main.js, в нём вызвать функцию из модуля foo, результат - в консоль. Это наглядно продемонстрирует работу watch при изменении js кода.
+ 	Ещё один момент: пусть в html файле подключается js модуль, и вызывается функция, 
+    результат работы которой пишется в консоль.
+ 	Например, подключить main.js, в нём вызвать функцию из модуля foo, результат - в консоль. 
+    Это наглядно продемонстрирует работу watch при изменении js кода.
  	Остальные js файлы (использующиеся в шагах 1 и 2) можно удалить.
 */
