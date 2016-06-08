@@ -25,7 +25,7 @@ const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV == 'developm
 gulp.task('browserify', function() {
     var files = glob.sync('frontend/**/main.js');
     return browserify({
-      entries: files,
+      entries: ["frontend/**/main.js"],
       debug: true
     })    
     .transform(babelify)
