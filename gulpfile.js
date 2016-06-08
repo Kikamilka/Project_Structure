@@ -15,7 +15,7 @@ const mocha = require('gulp-mocha');
 const babelify = require('babelify');
 const glob = require('glob');
 const gulp_util = require('gulp-util');
-const buff = require('vinyl-buffer')
+const buff = require('vinyl-buffer');
 
 const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV == 'development';
 
@@ -75,12 +75,10 @@ gulp.task('assets', function() {
         .pipe(gulp.dest('public'));
 });
 
-gulp.task('build', gulp.series('clean', gulp.parallel('styles', 'assets'))); 
-// FIXME а компиляция js не относится к build?
-
 gulp.task('watchPage', function() { // FIXME а отслеживание js файлов? (+ тесты для скриптов из директории frontend)
-    gulp.watch('frontend/styles/**/*.*', gulp.series('styles'));
-    gulp.watch('frontend/assets/**/*.*', gulp.series('assets'));
+    gulp.watch('frontend/js/**/*.js', gulp.series('browserify'));
+    gulp.watch('frontend/styles/**/*.css', gulp.series('styles'));
+    gulp.watch('frontend/assets/**/*.*', gulp.series('assets'));    
 });
 
 gulp.task('serve', function() {
@@ -90,10 +88,12 @@ gulp.task('serve', function() {
     browserSync.watch('public/**/*.*').on('change', browserSync.reload);
 });
 
-gulp.task('dev',
-    gulp.series('build', gulp.parallel('watchPage', 'serve'))
-		 );
+gulp.task('build', gulp.series('clean', 'browserify', 'styles', 'assets'));
 
+gulp.task('dev',
+    gulp.series('build', gulp.parallel('watchPage', 'serve')));
+
+/* как подключить js модуль к страничке html ??? */
 /*
  	FIXME
  	Составные таски (которые будут вызываться из консоли - default, dev) лучше определять в конце файла, 
