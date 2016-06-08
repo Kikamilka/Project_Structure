@@ -23,7 +23,7 @@ const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV == 'developm
 // 2. Минификация JS
 // 3. Склейка JS в один бандл (gulp browserify)
 gulp.task('browserify', function() {
-    var files = glob.sync('frontend/**/*.js');
+    var files = glob.sync('frontend/**/main.js');
     return browserify({
       entries: files,
       debug: true
@@ -75,9 +75,9 @@ gulp.task('assets', function() {
         .pipe(gulp.dest('public'));
 });
 
-gulp.task('watchPage', function() { // FIXME а отслеживание js файлов? (+ тесты для скриптов из директории frontend)
+gulp.task('watchPage', function() {
     gulp.watch('frontend/js/**/*.js', gulp.series('browserify'));
-    gulp.watch('frontend/styles/**/*.css', gulp.series('styles'));
+    gulp.watch('frontend/styles/**/*.styl', gulp.series('styles'));
     gulp.watch('frontend/assets/**/*.*', gulp.series('assets'));    
 });
 
@@ -88,7 +88,7 @@ gulp.task('serve', function() {
     browserSync.watch('public/**/*.*').on('change', browserSync.reload);
 });
 
-gulp.task('build', gulp.series('clean', 'browserify', 'styles', 'assets'));
+gulp.task('build', gulp.series('default', 'assets'));
 
 gulp.task('dev',
     gulp.series('build', gulp.parallel('watchPage', 'serve')));

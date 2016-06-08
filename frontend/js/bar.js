@@ -1,1 +1,1 @@
-module.exports = function (n) { return n * 3 };
+module.exports = function (n) { return n * 4 };
